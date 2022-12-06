@@ -7,14 +7,15 @@ import { createLogger } from '../utils/logger'
 import * as uuid from 'uuid'
 import * as createError from 'http-errors'
 import {attachmentUrl} from "../utils/constants";
+import { TodoPagination } from '../models/TodoPagination'
 
 const logger = createLogger('Todos')
 const todosAccess = new TodosAccess()
 const s3Storage = new S3Storage()
 
-const getTodosByUserId = async (userId: string): Promise<TodoItem[]> => {
+const getTodosByUserId = async (userId: string, limit: number): Promise<TodoPagination> => {
   try {
-    const todos = await todosAccess.getTodosByUserId(userId)
+    const todos = await todosAccess.getTodosByUserId(userId, limit)
     logger.info('todos # getTodosByUserId - todos: ', todos)
     return todos
   } catch (error) {

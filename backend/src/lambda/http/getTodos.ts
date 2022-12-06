@@ -3,19 +3,18 @@ import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
-import { getUserId } from '../utils'
 import { getTodosByUserId } from '../../businessLogic/todos'
+import { getUserId, parseLimitParameter } from '../utils'
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const userId = getUserId(event)
-    const todos = await getTodosByUserId(userId)
+    const userId: string = getUserId(event)
+    const limit: number = parseLimitParameter(event)
+    const todos = await getTodosByUserId(userId, limit)
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        items: todos
-      })
+      body: JSON.stringify(todos)
     }
   }
 )
