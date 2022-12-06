@@ -59,6 +59,7 @@ functions:
           - xray:PutTelemetryRecords
           - xray:PutTraceSegments
         Resource: '*'
+    timeout: 10
 
   GetTodos:
     handler: src/lambda/http/getTodos.handler
@@ -88,8 +89,11 @@ functions:
           - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
           - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_USER_ID_CREATED_AT_INDEX}
 
+    timeout: 10
+
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
+    timeout: 10
     events:
       - http:
           method: post
@@ -115,6 +119,7 @@ functions:
 
   UpdateTodo:
     handler: src/lambda/http/updateTodo.handler
+    timeout: 10
     events:
       - http:
           method: patch
@@ -141,6 +146,7 @@ functions:
 
   DeleteTodo:
     handler: src/lambda/http/deleteTodo.handler
+    timeout: 10
     events:
       - http:
           method: delete
@@ -168,6 +174,7 @@ functions:
 
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
+    timeout: 10
     events:
       - http:
           method: post
