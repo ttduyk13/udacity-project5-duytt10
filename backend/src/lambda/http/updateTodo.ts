@@ -17,13 +17,14 @@ export const handler = middy(
 
     return {
       statusCode: 200,
-      body: ""
+      body: ''
     }
   }
 )
 
 handler.use(httpErrorHandler()).use(
   cors({
+    origin: '*',
     credentials: true
   })
 )

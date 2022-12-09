@@ -59,6 +59,7 @@ functions:
           - xray:PutTelemetryRecords
           - xray:PutTraceSegments
         Resource: '*'
+    timeout: 5
 
   GetTodos:
     handler: src/lambda/http/getTodos.handler
@@ -88,8 +89,11 @@ functions:
           - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
           - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_USER_ID_CREATED_AT_INDEX}
 
+    timeout: 5
+
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
+    timeout: 5
     events:
       - http:
           method: post
@@ -115,6 +119,7 @@ functions:
 
   UpdateTodo:
     handler: src/lambda/http/updateTodo.handler
+    timeout: 5
     events:
       - http:
           method: patch
@@ -141,6 +146,7 @@ functions:
 
   DeleteTodo:
     handler: src/lambda/http/deleteTodo.handler
+    timeout: 5
     events:
       - http:
           method: delete
@@ -157,6 +163,7 @@ functions:
       - Effect: Allow
         Action:
           - s3:DeleteObject
+          - s3:GetObject
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
       - Effect: Allow
         Action:
@@ -168,6 +175,7 @@ functions:
 
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
+    timeout: 5
     events:
       - http:
           method: post
@@ -215,7 +223,7 @@ resources:
         ResponseParameters:
           gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
           gatewayresponse.header.Access-Control-Allow-Headers: "'Context-Type,X-Amz-Date,Authorization'"
-          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST,DELETE,HEAD'"
 
     TodosTable:
       Type: AWS::DynamoDB::Table

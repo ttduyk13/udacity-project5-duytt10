@@ -1,8 +1,10 @@
 import * as AWS from 'aws-sdk'
-import {DocumentClient} from 'aws-sdk/clients/dynamodb'
-import {TodoItem} from '../models/TodoItem'
-import {TodoUpdate} from '../models/TodoUpdate'
-import {createLogger} from '../utils/logger'
+import { DocumentClient } from 'aws-sdk/clients/dynamodb'
+import { TodoItem } from '../models/TodoItem'
+import { TodoUpdate } from '../models/TodoUpdate'
+import { createLogger } from '../utils/logger'
+import { ItemsWithPage } from '../models/ItemsWithPage'
+import { TodoPagination } from '../models/TodoPagination'
 
 const AWSXRay = require('aws-xray-sdk')
 const logger = createLogger('TodosAccess')
@@ -10,24 +12,30 @@ const logger = createLogger('TodosAccess')
 const XAWS = AWSXRay.captureAWS(AWS)
 
 export class TodosAccess {
+  private currentUserId: string = null
+  private shouldFetch: boolean = false
+  private datas: TodoPagination = null
+  private limit: number = null
+
   constructor(
     private readonly docClient: DocumentClient = createXrayDynamoDBClient(),
-    private readonly todosTable = process.env.TODOS_TABLE
-  ) {}
+    private readonly todosTable = process.env.TODOS_TABLE,
+    private readonly todosTableIndex = process.env.TODOS_USER_ID_CREATED_AT_INDEX
+  ) {
+  }
 
-  getTodosByUserId = async (userId: string): Promise<TodoItem[]> => {
-    const params = {
-      TableName: this.todosTable,
-      KeyConditionExpression: 'userId = :userId',
-      ExpressionAttributeValues: {
-        ':userId': userId
-      },
-      ScanIndexForward: false
+  getTodosByUserId = async (userId: string, limit = null): Promise<TodoPagination> => {
+    if (this.currentUserId === null || this.currentUserId !== userId) {
+      this.currentUserId = userId
+      this.shouldFetch = true
+      logger.info('Should Fetch: ', userId, this.shouldFetch)
     }
+    this.limit = limit
+    const result = await this.fetchData()
 
-    const result = await this.docClient.query(params).promise()
+    logger.info('Result: ', result)
 
-    return result.Items as TodoItem[]
+    return result
   }
 
   createTodo = async (todoItem: TodoItem): Promise<TodoItem> => {
@@ -61,9 +69,9 @@ export class TodosAccess {
         ':updateDone': todoUpdate.done
       },
       ExpressionAttributeNames: {
-        "#name": "name",
-        "#dueDate": "dueDate",
-        "#done": "done"
+        '#name': 'name',
+        '#dueDate': 'dueDate',
+        '#done': 'done'
       }
     }
 
@@ -71,9 +79,9 @@ export class TodosAccess {
   }
 
   updateTodoWithAttachment = async (
-      todoId: string,
-      userId: string,
-      attachmentUrl: string
+    todoId: string,
+    userId: string,
+    attachmentUrl: string
   ): Promise<void> => {
     const params = {
       TableName: this.todosTable,
@@ -100,6 +108,58 @@ export class TodosAccess {
     }
 
     await this.docClient.delete(params).promise()
+  }
+
+  private fetchData = async (): Promise<TodoPagination> => {
+    if (this.shouldFetch || this.datas === null) {
+      logger.info('Fetch data for user: ', this.currentUserId)
+
+      let todos: ItemsWithPage[] = []
+      let lastEvaluatedKey: any = null
+      let currentPage: number = 1
+      let items: TodoItem[]
+      let totalItem: number = 0
+
+      do {
+        let params = {
+          TableName: this.todosTable,
+          LocalSecondaryIndexes: this.todosTableIndex,
+          KeyConditionExpression: 'userId = :userId',
+          ExpressionAttributeValues: {
+            ':userId': this.currentUserId
+          },
+          Limit: this.limit,
+          ExclusiveStartKey: lastEvaluatedKey,
+          ScanIndexForward: true    // true = ascending, false = descending
+        }
+
+        let result = await this.docClient.query(params).promise()
+        logger.info("result: ", result)
+        if (result.ScannedCount > 0) {
+          lastEvaluatedKey = result.LastEvaluatedKey
+          items = result.Items as TodoItem[]
+          totalItem += items.length
+          todos = [...todos, {
+            items: items,
+            currentPage: currentPage++,
+            nextKey: (encodeURIComponent(JSON.stringify(lastEvaluatedKey))) ?? null
+          }]
+          if (lastEvaluatedKey === undefined || lastEvaluatedKey === null) {
+            break
+          }
+        } else {
+          break;
+        }
+      } while (true)
+
+      this.shouldFetch = false
+
+      this.datas = {
+        totalPage: Math.ceil(totalItem / this.limit),
+        data: todos
+      }
+    }
+    return this.datas
   }
 }
 
