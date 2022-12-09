@@ -65,16 +65,16 @@ const updateTodo = async (
   }
 }
 
-const deleteTodo = async (todoId: string, userId: string): Promise<void> => {
+const deleteTodoAndItsAttachment = async (todoId: string, userId: string): Promise<void> => {
   try {
     await todosAccess.deleteTodo(todoId, userId)
     await s3Storage.deleteAttachment(todoId, userId)
 
     logger.info(
-      `todos # deleteTodo - delete success todo with todoId ${todoId} and userId ${userId}`
+      `todos # deleteTodoAndItAttachment - delete success ${todoId}`
     )
   } catch (error) {
-    logger.error('Error when delete todo from request: ', error)
+    logger.error('Error #deleteTodoAndItAttachment: ', error)
     createError(400, JSON.stringify(error))
   }
 }
@@ -103,6 +103,6 @@ export {
   getTodosByUserId,
   createTodo,
   updateTodo,
-  deleteTodo,
+  deleteTodoAndItsAttachment,
   createAttachmentPresignedUrl
 }

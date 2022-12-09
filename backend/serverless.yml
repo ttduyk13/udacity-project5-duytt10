@@ -144,8 +144,8 @@ functions:
           - xray:PutTraceSegments
         Resource: !GetAtt TodosTable.Arn
 
-  DeleteTodo:
-    handler: src/lambda/http/deleteTodo.handler
+  DeleteTodoAndItsAttachment:
+    handler: src/lambda/http/deleteTodoAndItsAttachment.handler
     timeout: 5
     events:
       - http:
