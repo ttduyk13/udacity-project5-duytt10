@@ -111,7 +111,7 @@ export class TodosAccess {
   }
 
   private fetchData = async (): Promise<TodoPagination> => {
-    if (this.shouldFetch || this.datas !== null) {
+    if (this.shouldFetch || this.datas === null) {
       logger.info('Fetch data for user: ', this.currentUserId)
 
       let todos: ItemsWithPage[] = []
@@ -123,7 +123,7 @@ export class TodosAccess {
       do {
         let params = {
           TableName: this.todosTable,
-          IndexName: this.todosTableIndex,
+          LocalSecondaryIndexes: this.todosTableIndex,
           KeyConditionExpression: 'userId = :userId',
           ExpressionAttributeValues: {
             ':userId': this.currentUserId
@@ -134,7 +134,8 @@ export class TodosAccess {
         }
 
         let result = await this.docClient.query(params).promise()
-        if (result.Items.length > 0) {
+        logger.info("result: ", result)
+        if (result.ScannedCount > 0) {
           lastEvaluatedKey = result.LastEvaluatedKey
           items = result.Items as TodoItem[]
           totalItem += items.length
@@ -143,8 +144,13 @@ export class TodosAccess {
             currentPage: currentPage++,
             nextKey: (encodeURIComponent(JSON.stringify(lastEvaluatedKey))) ?? null
           }]
+          if (lastEvaluatedKey === undefined || lastEvaluatedKey === null) {
+            break
+          }
+        } else {
+          break;
         }
-      } while (lastEvaluatedKey)
+      } while (true)
 
       this.shouldFetch = false
 
