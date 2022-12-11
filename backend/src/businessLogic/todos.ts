@@ -83,20 +83,25 @@ const createAttachmentPresignedUrl = async (
   todoId: string,
   userId: string
 ): Promise<string> => {
+  let url = ''
   try {
-    const url = s3Storage.getUploadUrl(todoId, userId)
-    logger.info(
-      `todos # createAttachmentPresignedUrl - generate presigned url: ${url}`,
-
-    )
-
-    await todosAccess.updateTodoWithAttachment(todoId, userId, attachmentUrl(todoId, userId, s3Storage.getBucketName()));
-
-    return url
+    url = s3Storage.getUploadUrl(todoId, userId)
+    logger.info('todos #getUploadUrlAndUpdateTodoAttachment - url:', url)
   } catch (error) {
-    logger.error('Error when generating presigned URL to upload file: ', error)
+    logger.error('Error #getUploadUrlAndUpdateTodoAttachment: ', error)
     createError(400, JSON.stringify(error))
   }
+
+  try {
+    let updateAttachmentUrl = attachmentUrl(todoId, userId, s3Storage.getBucketName())
+    await todosAccess.updateTodoAttachment(todoId, userId, updateAttachmentUrl)
+    logger.info('todos #getUploadUrlAndUpdateTodoAttachment - updateTodoAttachment:', updateAttachmentUrl)
+  } catch (e) {
+    logger.error('Error #getUploadUrlAndUpdateTodoAttachment - updateTodoAttachment: ', e)
+    createError(400, JSON.stringify(e))
+  }
+
+  return url
 }
 
 export {
