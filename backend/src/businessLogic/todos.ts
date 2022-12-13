@@ -13,7 +13,7 @@ const logger = createLogger('Todos')
 const todosAccess = new TodosAccess()
 const s3Storage = new S3Storage()
 
-const getTodosByUserId = async (userId: string, limit: number): Promise<TodoPagination> => {
+const getTodosByUserIdWithPagination = async (userId: string, limit: number): Promise<TodoPagination> => {
   try {
     const todos = await todosAccess.getTodosByUserId(userId, limit)
     logger.info('todos # getTodosByUserId - todos: ', todos)

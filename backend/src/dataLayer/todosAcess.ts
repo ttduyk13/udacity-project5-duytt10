@@ -24,7 +24,7 @@ export class TodosAccess {
   ) {
   }
 
-  getTodosByUserId = async (userId: string, limit = null): Promise<TodoPagination> => {
+  getTodosByUserIdWithPagination = async (userId: string, limit = null): Promise<TodoPagination> => {
     if (this.currentUserId === null || this.currentUserId !== userId) {
       this.currentUserId = userId
       this.shouldFetch = true
@@ -78,7 +78,7 @@ export class TodosAccess {
     await this.docClient.update(params).promise()
   }
 
-  updateTodoWithAttachment = async (
+  updateTodoAttachment = async (
     todoId: string,
     userId: string,
     attachmentUrl: string

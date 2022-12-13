@@ -61,8 +61,8 @@ functions:
         Resource: '*'
     timeout: 5
 
-  GetTodos:
-    handler: src/lambda/http/getTodos.handler
+  GetTodosWithPagination:
+    handler: src/lambda/http/getTodosWithPagination.handler
     events:
       - http:
           method: get
@@ -173,8 +173,8 @@ functions:
           - !GetAtt TodosTable.Arn
           - arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
 
-  GenerateUploadUrl:
-    handler: src/lambda/http/generateUploadUrl.handler
+  GenerateUploadUrlAndUpdateAttachment:
+    handler: src/lambda/http/generateUploadUrlAndUpdateAttachment.handler
     timeout: 5
     events:
       - http:
