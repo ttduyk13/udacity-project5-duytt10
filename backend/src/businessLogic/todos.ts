@@ -6,7 +6,7 @@ import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
 import * as uuid from 'uuid'
 import * as createError from 'http-errors'
-import {attachmentUrl} from "../utils/constants";
+import { attachmentUrl } from '../utils/constants'
 import { TodoPagination } from '../models/TodoPagination'
 
 const logger = createLogger('Todos')
@@ -15,11 +15,11 @@ const s3Storage = new S3Storage()
 
 const getTodosByUserIdWithPagination = async (userId: string, limit: number): Promise<TodoPagination> => {
   try {
-    const todos = await todosAccess.getTodosByUserId(userId, limit)
-    logger.info('todos # getTodosByUserId - todos: ', todos)
+    const todos = await todosAccess.getTodosByUserIdWithPagination(userId, limit)
+    logger.info('todos # getTodosByUserIdWithPagination - todos: ', todos)
     return todos
   } catch (error) {
-    logger.error('Error when getting todos by user id: ', error)
+    logger.error('Error #getTodosByUserIdWithPagination: ', error)
     createError(400, JSON.stringify(error))
   }
 }
@@ -79,7 +79,7 @@ const deleteTodoAndItsAttachment = async (todoId: string, userId: string): Promi
   }
 }
 
-const createAttachmentPresignedUrl = async (
+const getUploadUrlAndUpdateTodoAttachment = async (
   todoId: string,
   userId: string
 ): Promise<string> => {
@@ -105,9 +105,9 @@ const createAttachmentPresignedUrl = async (
 }
 
 export {
-  getTodosByUserId,
+  getTodosByUserIdWithPagination,
   createTodo,
   updateTodo,
   deleteTodoAndItsAttachment,
-  createAttachmentPresignedUrl
+  getUploadUrlAndUpdateTodoAttachment
 }
