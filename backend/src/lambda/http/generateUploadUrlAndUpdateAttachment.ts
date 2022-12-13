@@ -4,19 +4,19 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
 
-import { deleteTodo } from '../../businessLogic/todos'
+import { getUploadUrlAndUpdateTodoAttachment } from '../../businessLogic/todos'
 import { getUserId } from '../utils'
-import { EMPTY_STRING } from '../../utils/constants'
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
     const userId = getUserId(event)
-    await deleteTodo(todoId, userId)
-
+    const url = await getUploadUrlAndUpdateTodoAttachment(todoId, userId)
     return {
       statusCode: 200,
-      body: EMPTY_STRING
+      body: JSON.stringify({
+        uploadUrl: url
+      })
     }
   }
 )

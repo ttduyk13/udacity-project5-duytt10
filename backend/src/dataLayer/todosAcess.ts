@@ -24,7 +24,7 @@ export class TodosAccess {
   ) {
   }
 
-  getTodosByUserId = async (userId: string, limit = null): Promise<TodoPagination> => {
+  getTodosByUserIdWithPagination = async (userId: string, limit = null): Promise<TodoPagination> => {
     if (this.currentUserId === null || this.currentUserId !== userId) {
       this.currentUserId = userId
       this.shouldFetch = true
@@ -48,6 +48,7 @@ export class TodosAccess {
 
     delete todoItem.userId
 
+    this.shouldFetch = true
     return todoItem
   }
 
@@ -76,9 +77,11 @@ export class TodosAccess {
     }
 
     await this.docClient.update(params).promise()
+
+    this.shouldFetch = true
   }
 
-  updateTodoWithAttachment = async (
+  updateTodoAttachment = async (
     todoId: string,
     userId: string,
     attachmentUrl: string
@@ -96,6 +99,8 @@ export class TodosAccess {
     }
 
     await this.docClient.update(params).promise()
+
+    this.shouldFetch = true
   }
 
   deleteTodo = async (todoId: string, userId: string): Promise<void> => {
@@ -108,6 +113,8 @@ export class TodosAccess {
     }
 
     await this.docClient.delete(params).promise()
+
+    this.shouldFetch = true
   }
 
   private fetchData = async (): Promise<TodoPagination> => {
